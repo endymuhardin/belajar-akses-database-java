@@ -17,6 +17,8 @@
         <commons-logging.version>1.1.1</commons-logging.version>
         <mysql.version>5.1.25</mysql.version>
         <joda-time.version>2.1</joda-time.version>
+        <commons-dbcp.version>1.4</commons-dbcp.version>
+        <org.springframework.version>3.2.3.RELEASE</org.springframework.version>
     </properties>
 
     <dependencies>
@@ -70,6 +72,31 @@
             <artifactId>joda-time</artifactId>
             <version>${joda-time.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>commons-dbcp</groupId>
+            <artifactId>commons-dbcp</artifactId>
+            <version>${commons-dbcp.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>${org.springframework.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+            <version>${org.springframework.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <version>${org.springframework.version}</version>
+            <scope>test</scope>
+        </dependency>    
     </dependencies>
   
     <build>
