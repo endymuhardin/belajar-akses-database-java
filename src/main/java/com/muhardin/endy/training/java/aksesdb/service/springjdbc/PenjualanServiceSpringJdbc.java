@@ -1,5 +1,7 @@
 package com.muhardin.endy.training.java.aksesdb.service.springjdbc;
 
+import com.muhardin.endy.training.java.aksesdb.dao.springjdbc.PenjualanDao;
+import com.muhardin.endy.training.java.aksesdb.dao.springjdbc.PenjualanDetailDao;
 import com.muhardin.endy.training.java.aksesdb.dao.springjdbc.ProdukDao;
 import com.muhardin.endy.training.java.aksesdb.domain.Penjualan;
 import com.muhardin.endy.training.java.aksesdb.domain.PenjualanDetail;
@@ -14,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service @Transactional
 public class PenjualanServiceSpringJdbc implements PenjualanService{
     @Autowired private ProdukDao produkDao;
+    @Autowired private PenjualanDao penjualanDao;
+    @Autowired private PenjualanDetailDao penjualanDetailDao;
 
     @Override
     public void simpan(Produk p) {
@@ -52,32 +56,32 @@ public class PenjualanServiceSpringJdbc implements PenjualanService{
 
     @Override
     public void simpan(Penjualan p) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        penjualanDao.simpan(p);
     }
 
     @Override
     public Penjualan cariPenjualanById(Integer id) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return penjualanDao.cariById(id);
     }
 
     @Override
     public Long hitungPenjualanByPeriode(Date mulai, Date sampai) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return penjualanDao.hitungByPeriode(mulai, sampai);
     }
 
     @Override
     public List<Penjualan> cariPenjualanByPeriode(Date mulai, Date sampai, Integer halaman, Integer baris) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return penjualanDao.cariByPeriode(mulai, sampai, halaman, baris);
     }
 
     @Override
     public Long hitungPenjualanDetailByProdukDanPeriode(Produk p, Date mulai, Date sampai) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return penjualanDetailDao.hitungByProdukDanPeriode(p, mulai, sampai);
     }
 
     @Override
     public List<PenjualanDetail> cariPenjualanDetailByProdukDanPeriode(Produk p, Date mulai, Date sampai, Integer halaman, Integer baris) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return penjualanDetailDao.cariByProdukDanPeriode(p, mulai, sampai, halaman, baris);
     }
 
 }
