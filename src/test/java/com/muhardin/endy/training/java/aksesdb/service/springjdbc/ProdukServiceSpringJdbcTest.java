@@ -10,7 +10,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath*:com/muhardin/**/spring-jdbc-ctx.xml")
-public class ProdukServiceTestSpringJdbc extends ProdukServiceTest {
+public class ProdukServiceSpringJdbcTest extends ProdukServiceTest {
 
     @Autowired private DataSource dataSource;
     @Autowired private PenjualanService penjualanService;
