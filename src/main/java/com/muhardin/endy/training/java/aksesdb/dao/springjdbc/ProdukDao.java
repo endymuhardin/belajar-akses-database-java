@@ -19,7 +19,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class ProdukDao {
 
-    private static final String SQL_UPDATE_PRODUK = "update m_produk set kode = :kode, nama = :nama, harga = :harga where id = :id";
+    private static final String SQL_UPDATE_PRODUK = "update m_produk set kode = :kode_produk, nama = :nama_produk, harga = :harga_produk where id = :id_produk";
     private static final String SQL_CARI_BY_ID = "select * from m_produk where id = ?";
     private static final String SQL_HAPUS = "delete from m_produk where id = ?";
     private static final String SQL_CARI_BY_KODE = "select * from m_produk where kode = ?";
@@ -47,10 +47,10 @@ public class ProdukDao {
             p.setId(idBaru.intValue());
         } else {
             SqlParameterSource produkParameter = new MapSqlParameterSource()
-                    .addValue("id", p.getId())
-                    .addValue("kode", p.getKode())
-                    .addValue("nama", p.getNama())
-                    .addValue("harga", p.getHarga());
+                    .addValue("id_produk", p.getId())
+                    .addValue("kode_produk", p.getKode())
+                    .addValue("nama_produk", p.getNama())
+                    .addValue("harga_produk", p.getHarga());
             namedParameterJdbcTemplate.update(SQL_UPDATE_PRODUK, produkParameter);
         }
     }
