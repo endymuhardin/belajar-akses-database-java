@@ -8,6 +8,7 @@ import com.muhardin.endy.training.java.aksesdb.domain.Produk;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.List;
 import javax.sql.DataSource;
 import org.junit.Test;
@@ -36,7 +37,7 @@ public abstract class ProdukServiceTest {
     }
     
     @Test
-    public void testSimpanProduk() {
+    public void testSimpanUpdateHapusProduk() throws Exception{
         Produk p = new Produk();
         p.setHarga(new BigDecimal(125000));
         p.setKode("T-001");
@@ -45,6 +46,33 @@ public abstract class ProdukServiceTest {
         PenjualanService service = getPenjualanService();
         service.simpan(p);
         assertNotNull(p.getId());
+        
+        Connection conn = getDataSource().getConnection();
+        PreparedStatement psCariById = conn.prepareStatement("select * from m_produk where id = ?");
+        psCariById.setInt(1, p.getId());
+        ResultSet rs = psCariById.executeQuery();
+        
+        // test nilai awal
+        assertTrue(rs.next());
+        assertEquals("T-001",rs.getString("kode"));
+        
+        // update record
+        p.setKode("T-001x");
+        service.simpan(p);
+        
+        // test query setelah update
+        rs = psCariById.executeQuery();
+        
+        assertTrue(rs.next());
+        assertEquals("T-001x",rs.getString("kode"));
+        
+        // test delete
+        service.hapus(p);
+        
+        // test query setelah hapus
+        rs = psCariById.executeQuery();
+        
+        assertFalse(rs.next());
     }
 
     @Test

@@ -9,6 +9,7 @@ import java.util.List;
 public interface PenjualanService {
     // service berkaitan dengan produk
     void simpan(Produk p);
+    void hapus(Produk p);
     Produk cariProdukById(Integer id);
     Produk cariProdukByKode(String kode);
     Long hitungSemuaProduk();
