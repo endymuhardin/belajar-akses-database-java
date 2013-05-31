@@ -29,9 +29,9 @@ public abstract class ProdukServiceTest {
         DataSource ds = getDataSource();
         Connection conn = ds.getConnection();
         
-        String sql = "delete from m_produk where kode=?";
+        String sql = "delete from m_produk where kode like ?";
         PreparedStatement ps = conn.prepareStatement(sql);
-        ps.setString(1,"T-001");
+        ps.setString(1,"T-001%");
         ps.executeUpdate();
         conn.close();
     }
@@ -48,7 +48,8 @@ public abstract class ProdukServiceTest {
         assertNotNull(p.getId());
         
         Connection conn = getDataSource().getConnection();
-        PreparedStatement psCariById = conn.prepareStatement("select * from m_produk where id = ?");
+        PreparedStatement psCariById 
+                = conn.prepareStatement("select * from m_produk where id = ?");
         psCariById.setInt(1, p.getId());
         ResultSet rs = psCariById.executeQuery();
         
