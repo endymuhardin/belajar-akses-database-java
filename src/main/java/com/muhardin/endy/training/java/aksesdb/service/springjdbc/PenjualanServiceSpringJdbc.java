@@ -23,6 +23,11 @@ public class PenjualanServiceSpringJdbc implements PenjualanService{
     public void simpan(Produk p) {
         produkDao.simpan(p);
     }
+    
+    @Override
+    public void hapus(Produk p) {
+        produkDao.hapus(p);
+    }
 
     @Override
     public Produk cariProdukById(Integer id) {

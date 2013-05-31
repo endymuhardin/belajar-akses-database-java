@@ -10,6 +10,8 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
@@ -17,27 +19,40 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class ProdukDao {
 
+    private static final String SQL_UPDATE_PRODUK = "update m_produk set kode = :kode, nama = :nama, harga = :harga where id = :id";
     private static final String SQL_CARI_BY_ID = "select * from m_produk where id = ?";
+    private static final String SQL_HAPUS = "delete from m_produk where id = ?";
     private static final String SQL_CARI_BY_KODE = "select * from m_produk where kode = ?";
     private static final String SQL_HITUNG_SEMUA = "select count(*) from m_produk";
     private static final String SQL_CARI_SEMUA = "select * from m_produk limit ?,?";
     private static final String SQL_HITUNG_BY_NAMA = "select count(*) from m_produk where lower(nama) like ?";
     private static final String SQL_CARI_BY_NAMA = "select * from m_produk where lower(nama) like ? limit ?,?";
     private JdbcTemplate jdbcTemplate;
+    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private SimpleJdbcInsert insertProduk;
 
     @Autowired
     public void setDataSource(DataSource dataSource) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
         this.insertProduk = new SimpleJdbcInsert(dataSource)
                 .withTableName("m_produk")
                 .usingGeneratedKeyColumns("id");
     }
 
     public void simpan(Produk p) {
-        SqlParameterSource produkParameter = new BeanPropertySqlParameterSource(p);
-        Number idBaru = insertProduk.executeAndReturnKey(produkParameter);
-        p.setId(idBaru.intValue());
+        if (p.getId() == null) {
+            SqlParameterSource produkParameter = new BeanPropertySqlParameterSource(p);
+            Number idBaru = insertProduk.executeAndReturnKey(produkParameter);
+            p.setId(idBaru.intValue());
+        } else {
+            SqlParameterSource produkParameter = new MapSqlParameterSource()
+                    .addValue("id", p.getId())
+                    .addValue("kode", p.getKode())
+                    .addValue("nama", p.getNama())
+                    .addValue("harga", p.getHarga());
+            namedParameterJdbcTemplate.update(SQL_UPDATE_PRODUK, produkParameter);
+        }
     }
 
     public Produk cariById(Integer id) {
@@ -77,6 +92,10 @@ public class ProdukDao {
                 "%" + nama.toLowerCase() + "%",
                 PagingHelper.halamanJadiStart(halaman, baris),
                 baris);
+    }
+
+    public void hapus(Produk p) {
+        jdbcTemplate.update(SQL_HAPUS, p.getId());
     }
 
     private class ResultSetJadiProduk implements RowMapper<Produk> {
