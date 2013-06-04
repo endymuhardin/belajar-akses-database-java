@@ -21,12 +21,12 @@ public class PenjualanServicePlainJdbc implements PenjualanService {
     private static final String SQL_INSERT_PRODUK = "insert into m_produk (kode, nama, harga) values (?,?,?)";
     private static final String SQL_UPDATE_PRODUK = "update m_produk set kode = ?, nama = ?, harga = ? where id = ?";
     private static final String SQL_HAPUS_PRODUK = "delete from m_produk where id = ?";
-    private static final String SQL_CARI_BY_ID = "select * from m_produk where id = ?";
-    private static final String SQL_CARI_BY_KODE = "select * from m_produk where kode = ?";
-    private static final String SQL_HITUNG_SEMUA = "select count(*) from m_produk";
-    private static final String SQL_CARI_SEMUA = "select * from m_produk limit ?,?";
-    private static final String SQL_HITUNG_BY_NAMA = "select count(*) from m_produk where lower(nama) like ?";
-    private static final String SQL_CARI_BY_NAMA = "select * from m_produk where lower(nama) like ? limit ?,?";
+    private static final String SQL_CARI_PRODUK_BY_ID = "select * from m_produk where id = ?";
+    private static final String SQL_CARI_PRODUK_BY_KODE = "select * from m_produk where kode = ?";
+    private static final String SQL_HITUNG_SEMUA_PRODUK = "select count(*) from m_produk";
+    private static final String SQL_CARI_SEMUA_PRODUK = "select * from m_produk limit ?,?";
+    private static final String SQL_HITUNG_PRODUK_BY_NAMA = "select count(*) from m_produk where lower(nama) like ?";
+    private static final String SQL_CARI_PRODUK_BY_NAMA = "select * from m_produk where lower(nama) like ? limit ?,?";
     
     
     private DataSource dataSource;
@@ -129,7 +129,7 @@ public class PenjualanServicePlainJdbc implements PenjualanService {
         try {
             conn = dataSource.getConnection();
             conn.setAutoCommit(false);
-            PreparedStatement ps = conn.prepareStatement(SQL_CARI_BY_ID);
+            PreparedStatement ps = conn.prepareStatement(SQL_CARI_PRODUK_BY_ID);
             
             ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
@@ -167,7 +167,7 @@ public class PenjualanServicePlainJdbc implements PenjualanService {
         try {
             conn = dataSource.getConnection();
             conn.setAutoCommit(false);
-            PreparedStatement ps = conn.prepareStatement(SQL_CARI_BY_KODE);
+            PreparedStatement ps = conn.prepareStatement(SQL_CARI_PRODUK_BY_KODE);
             
             ps.setString(1, kode);
             ResultSet rs = ps.executeQuery();
@@ -205,7 +205,7 @@ public class PenjualanServicePlainJdbc implements PenjualanService {
         try {
             conn = dataSource.getConnection();
             conn.setAutoCommit(false);
-            PreparedStatement ps = conn.prepareStatement(SQL_HITUNG_SEMUA);
+            PreparedStatement ps = conn.prepareStatement(SQL_HITUNG_SEMUA_PRODUK);
             
             ResultSet rs = ps.executeQuery();
             if(rs.next()){
@@ -242,7 +242,7 @@ public class PenjualanServicePlainJdbc implements PenjualanService {
         try {
             conn = dataSource.getConnection();
             conn.setAutoCommit(false);
-            PreparedStatement ps = conn.prepareStatement(SQL_CARI_SEMUA);
+            PreparedStatement ps = conn.prepareStatement(SQL_CARI_SEMUA_PRODUK);
             ps.setInt(1, PagingHelper.halamanJadiStart(halaman, baris));
             ps.setInt(2, baris);
             
@@ -282,7 +282,7 @@ public class PenjualanServicePlainJdbc implements PenjualanService {
         try {
             conn = dataSource.getConnection();
             conn.setAutoCommit(false);
-            PreparedStatement ps = conn.prepareStatement(SQL_HITUNG_BY_NAMA);
+            PreparedStatement ps = conn.prepareStatement(SQL_HITUNG_PRODUK_BY_NAMA);
             ps.setString(1, "%"+nama.toLowerCase()+"%");
             
             ResultSet rs = ps.executeQuery();
@@ -320,7 +320,7 @@ public class PenjualanServicePlainJdbc implements PenjualanService {
         try {
             conn = dataSource.getConnection();
             conn.setAutoCommit(false);
-            PreparedStatement ps = conn.prepareStatement(SQL_CARI_BY_NAMA);
+            PreparedStatement ps = conn.prepareStatement(SQL_CARI_PRODUK_BY_NAMA);
             ps.setString(1, "%"+nama.toLowerCase()+"%");
             ps.setInt(2, PagingHelper.halamanJadiStart(halaman, baris));
             ps.setInt(3, baris);
