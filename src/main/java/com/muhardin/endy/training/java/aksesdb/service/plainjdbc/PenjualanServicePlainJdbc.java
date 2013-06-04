@@ -9,6 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import javax.sql.DataSource;
@@ -23,6 +24,7 @@ public class PenjualanServicePlainJdbc implements PenjualanService {
     private static final String SQL_CARI_BY_ID = "select * from m_produk where id = ?";
     private static final String SQL_CARI_BY_KODE = "select * from m_produk where kode = ?";
     private static final String SQL_HITUNG_SEMUA = "select count(*) from m_produk";
+    private static final String SQL_CARI_SEMUA = "select * from m_produk limit ?,?";
     
     
     private DataSource dataSource;
@@ -233,7 +235,42 @@ public class PenjualanServicePlainJdbc implements PenjualanService {
 
     @Override
     public List<Produk> cariSemuaProduk(Integer halaman, Integer baris) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Connection conn = null;
+        List<Produk> hasil = new ArrayList<Produk>();
+        try {
+            conn = dataSource.getConnection();
+            conn.setAutoCommit(false);
+            PreparedStatement ps = conn.prepareStatement(SQL_CARI_SEMUA);
+            ps.setInt(1, PagingHelper.halamanJadiStart(halaman, baris));
+            ps.setInt(2, baris);
+            
+            ResultSet rs = ps.executeQuery();
+            while(rs.next()){
+                Produk x = konversiResultSetJadiProduk(rs);
+                hasil.add(x);
+            }
+            
+            conn.commit();
+            conn.setAutoCommit(true);
+        } catch (Exception err) {
+            LOGGER.error(err.getMessage(), err);
+            if(conn !=  null){
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    LOGGER.error(ex.getMessage(), ex);
+                }
+            }
+        } finally {
+            if(conn != null){
+                try {
+                    conn.close();
+                } catch (SQLException ex) {
+                    LOGGER.error(ex.getMessage(), ex);
+                }
+            }
+            return hasil;
+        }
     }
 
     @Override
