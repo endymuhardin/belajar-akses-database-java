@@ -11,7 +11,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
 import java.util.List;
-import java.util.logging.Level;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +20,8 @@ public class PenjualanServicePlainJdbc implements PenjualanService {
     private static final String SQL_INSERT_PRODUK = "insert into m_produk (kode, nama, harga) values (?,?,?)";
     private static final String SQL_UPDATE_PRODUK = "update m_produk set kode = ?, nama = ?, harga = ? where id = ?";
     private static final String SQL_HAPUS_PRODUK = "delete from m_produk where id = ?";
+    private static final String SQL_CARI_BY_ID = "select * from m_produk where id = ?";
+    private static final String SQL_CARI_BY_KODE = "select * from m_produk where kode = ?";
     
     
     private DataSource dataSource;
@@ -118,12 +119,78 @@ public class PenjualanServicePlainJdbc implements PenjualanService {
 
     @Override
     public Produk cariProdukById(Integer id) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Connection conn = null;
+        Produk p = null;
+        try {
+            conn = dataSource.getConnection();
+            conn.setAutoCommit(false);
+            PreparedStatement ps = conn.prepareStatement(SQL_CARI_BY_ID);
+            
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            if(rs.next()){
+                p = konversiResultSetJadiProduk(rs);
+            }
+            
+            conn.commit();
+            conn.setAutoCommit(true);
+        } catch (Exception err) {
+            LOGGER.error(err.getMessage(), err);
+            if(conn !=  null){
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    LOGGER.error(ex.getMessage(), ex);
+                }
+            }
+        } finally {
+            if(conn != null){
+                try {
+                    conn.close();
+                } catch (SQLException ex) {
+                    LOGGER.error(ex.getMessage(), ex);
+                }
+            }
+            return p;
+        }
     }
 
     @Override
     public Produk cariProdukByKode(String kode) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Connection conn = null;
+        Produk p = null;
+        try {
+            conn = dataSource.getConnection();
+            conn.setAutoCommit(false);
+            PreparedStatement ps = conn.prepareStatement(SQL_CARI_BY_KODE);
+            
+            ps.setString(1, kode);
+            ResultSet rs = ps.executeQuery();
+            if(rs.next()){
+                p = konversiResultSetJadiProduk(rs);
+            }
+            
+            conn.commit();
+            conn.setAutoCommit(true);
+        } catch (Exception err) {
+            LOGGER.error(err.getMessage(), err);
+            if(conn !=  null){
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    LOGGER.error(ex.getMessage(), ex);
+                }
+            }
+        } finally {
+            if(conn != null){
+                try {
+                    conn.close();
+                } catch (SQLException ex) {
+                    LOGGER.error(ex.getMessage(), ex);
+                }
+            }
+            return p;
+        }
     }
 
     @Override
@@ -177,5 +244,12 @@ public class PenjualanServicePlainJdbc implements PenjualanService {
     }
     
     
-    
+    private Produk konversiResultSetJadiProduk(ResultSet rs) throws SQLException {
+        Produk p = new Produk();
+        p.setId((Integer) rs.getObject("id"));
+        p.setKode(rs.getString("kode"));
+        p.setNama(rs.getString("nama"));
+        p.setHarga(rs.getBigDecimal("harga"));
+        return p;
+    }
 }
