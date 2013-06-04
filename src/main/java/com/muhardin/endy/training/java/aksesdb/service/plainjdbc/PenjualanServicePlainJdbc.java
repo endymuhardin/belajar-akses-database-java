@@ -22,6 +22,7 @@ public class PenjualanServicePlainJdbc implements PenjualanService {
     private static final String SQL_HAPUS_PRODUK = "delete from m_produk where id = ?";
     private static final String SQL_CARI_BY_ID = "select * from m_produk where id = ?";
     private static final String SQL_CARI_BY_KODE = "select * from m_produk where kode = ?";
+    private static final String SQL_HITUNG_SEMUA = "select count(*) from m_produk";
     
     
     private DataSource dataSource;
@@ -195,7 +196,39 @@ public class PenjualanServicePlainJdbc implements PenjualanService {
 
     @Override
     public Long hitungSemuaProduk() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Connection conn = null;
+        Long p = 0L;
+        try {
+            conn = dataSource.getConnection();
+            conn.setAutoCommit(false);
+            PreparedStatement ps = conn.prepareStatement(SQL_HITUNG_SEMUA);
+            
+            ResultSet rs = ps.executeQuery();
+            if(rs.next()){
+                p = rs.getLong(1);
+            }
+            
+            conn.commit();
+            conn.setAutoCommit(true);
+        } catch (Exception err) {
+            LOGGER.error(err.getMessage(), err);
+            if(conn !=  null){
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    LOGGER.error(ex.getMessage(), ex);
+                }
+            }
+        } finally {
+            if(conn != null){
+                try {
+                    conn.close();
+                } catch (SQLException ex) {
+                    LOGGER.error(ex.getMessage(), ex);
+                }
+            }
+            return p;
+        }
     }
 
     @Override
