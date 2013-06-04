@@ -28,6 +28,8 @@ public class PenjualanServicePlainJdbc implements PenjualanService {
     private static final String SQL_HITUNG_PRODUK_BY_NAMA = "select count(*) from m_produk where lower(nama) like ?";
     private static final String SQL_CARI_PRODUK_BY_NAMA = "select * from m_produk where lower(nama) like ? limit ?,?";
     
+    private static final String SQL_INSERT_PENJUALAN = "insert into t_penjualan(waktu_transaksi) values (?)";
+    private static final String SQL_INSERT_PENJUALAN_DETAIL = "insert into t_penjualan_detail (id_penjualan, id_produk, jumlah, harga) values (?,?,?,?)";
     
     private DataSource dataSource;
 
@@ -356,7 +358,57 @@ public class PenjualanServicePlainJdbc implements PenjualanService {
 
     @Override
     public void simpan(Penjualan p) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Connection conn = null;
+        try {
+            conn = dataSource.getConnection();
+            conn.setAutoCommit(false);
+            
+            
+            PreparedStatement ps = conn.prepareStatement(SQL_INSERT_PENJUALAN, Statement.RETURN_GENERATED_KEYS);
+
+            ps.setDate(1, new java.sql.Date(p.getWaktuTransaksi().getTime()));
+            ps.executeUpdate();
+
+            ResultSet rsKey = ps.getGeneratedKeys();
+            if(rsKey.next()) {
+                p.setId(((Long) rsKey.getObject(1)).intValue());
+
+                for (PenjualanDetail pd : p.getDaftarPenjualanDetail()) {
+                    PreparedStatement psDetail = conn.prepareStatement(SQL_INSERT_PENJUALAN_DETAIL, Statement.RETURN_GENERATED_KEYS);
+                    psDetail.setInt(1, p.getId());
+                    psDetail.setInt(2, pd.getProduk().getId());
+                    psDetail.setInt(3, pd.getJumlah());
+                    psDetail.setBigDecimal(4, pd.getHarga());
+                    psDetail.executeUpdate();
+
+                    ResultSet rsKeyDetail = psDetail.getGeneratedKeys();
+                    if(rsKeyDetail.next()){
+                        pd.setId(((Long) rsKeyDetail.getObject(1)).intValue());
+                    }
+                }
+
+            }
+            
+            conn.commit();
+            conn.setAutoCommit(true);
+        } catch (Exception err) {
+            LOGGER.error(err.getMessage(), err);
+            if(conn !=  null){
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    LOGGER.error(ex.getMessage(), ex);
+                }
+            }
+        } finally {
+            if(conn != null){
+                try {
+                    conn.close();
+                } catch (SQLException ex) {
+                    LOGGER.error(ex.getMessage(), ex);
+                }
+            }
+        }
     }
 
     @Override
