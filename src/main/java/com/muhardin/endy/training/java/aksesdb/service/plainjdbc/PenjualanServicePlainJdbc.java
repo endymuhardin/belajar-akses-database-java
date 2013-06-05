@@ -30,6 +30,13 @@ public class PenjualanServicePlainJdbc implements PenjualanService {
     
     private static final String SQL_INSERT_PENJUALAN = "insert into t_penjualan(waktu_transaksi) values (?)";
     private static final String SQL_INSERT_PENJUALAN_DETAIL = "insert into t_penjualan_detail (id_penjualan, id_produk, jumlah, harga) values (?,?,?,?)";
+    private static final String SQL_CARI_PENJUALAN_BY_ID = "select * from t_penjualan where id = ?";
+    private static final String SQL_CARI_PENJUALAN_DETAIL_BY_ID_PENJUALAN = "select pd.*, p.waktu_transaksi, "
+            + "produk.kode as kode_produk, produk.nama as nama_produk, produk.harga as harga_produk "
+            + "from t_penjualan_detail pd "
+            + "inner join t_penjualan p on pd.id_penjualan = p.id "
+            + "inner join m_produk produk on pd.id_produk = produk.id "
+            + "where id_penjualan = ?";
     
     private DataSource dataSource;
 
@@ -413,7 +420,42 @@ public class PenjualanServicePlainJdbc implements PenjualanService {
 
     @Override
     public Penjualan cariPenjualanById(Integer id) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Connection conn = null;
+        Penjualan p = null;
+        try {
+            conn = dataSource.getConnection();
+            conn.setAutoCommit(false);
+            PreparedStatement ps = conn.prepareStatement(SQL_CARI_PENJUALAN_BY_ID);
+            
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            if(rs.next()){
+                p = konversiResultSetJadiPenjualan(rs);
+                List<PenjualanDetail> daftarDetail = cariPenjualanDetailByPenjualan(p);
+                p.setDaftarPenjualanDetail(daftarDetail);
+            }
+            
+            conn.commit();
+            conn.setAutoCommit(true);
+        } catch (Exception err) {
+            LOGGER.error(err.getMessage(), err);
+            if(conn !=  null){
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    LOGGER.error(ex.getMessage(), ex);
+                }
+            }
+        } finally {
+            if(conn != null){
+                try {
+                    conn.close();
+                } catch (SQLException ex) {
+                    LOGGER.error(ex.getMessage(), ex);
+                }
+            }
+            return p;
+        }
     }
 
     @Override
@@ -435,6 +477,44 @@ public class PenjualanServicePlainJdbc implements PenjualanService {
     public List<PenjualanDetail> cariPenjualanDetailByProdukDanPeriode(Produk p, Date mulai, Date sampai, Integer halaman, Integer baris) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+
+    private List<PenjualanDetail> cariPenjualanDetailByPenjualan(Penjualan p) {
+        Connection conn = null;
+        List<PenjualanDetail> hasil = new ArrayList<PenjualanDetail>();
+        try {
+            conn = dataSource.getConnection();
+            conn.setAutoCommit(false);
+            PreparedStatement ps = conn.prepareStatement(SQL_CARI_PENJUALAN_DETAIL_BY_ID_PENJUALAN);
+            
+            ps.setInt(1, p.getId());
+            ResultSet rs = ps.executeQuery();
+            while(rs.next()){
+                PenjualanDetail pd = konversiResultSetJadiPenjualanDetail(rs);
+                hasil.add(pd);
+            }
+            
+            conn.commit();
+            conn.setAutoCommit(true);
+        } catch (Exception err) {
+            LOGGER.error(err.getMessage(), err);
+            if(conn !=  null){
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    LOGGER.error(ex.getMessage(), ex);
+                }
+            }
+        } finally {
+            if(conn != null){
+                try {
+                    conn.close();
+                } catch (SQLException ex) {
+                    LOGGER.error(ex.getMessage(), ex);
+                }
+            }
+            return hasil;
+        }
+    }
     
     
     private Produk konversiResultSetJadiProduk(ResultSet rs) throws SQLException {
@@ -443,6 +523,37 @@ public class PenjualanServicePlainJdbc implements PenjualanService {
         p.setKode(rs.getString("kode"));
         p.setNama(rs.getString("nama"));
         p.setHarga(rs.getBigDecimal("harga"));
+        return p;
+    }
+
+    private Penjualan konversiResultSetJadiPenjualan(ResultSet rs) throws SQLException {
+        Penjualan p = new Penjualan();
+        p.setId((Integer) rs.getObject("id"));
+        p.setWaktuTransaksi(rs.getDate("waktu_transaksi"));
+        return p;
+    }
+    
+    private PenjualanDetail konversiResultSetJadiPenjualanDetail(ResultSet rs) throws SQLException {
+        PenjualanDetail p = new PenjualanDetail();
+        p.setId((Integer) rs.getObject("id"));
+        p.setId((Integer) rs.getObject("id"));
+        p.setHarga(rs.getBigDecimal("harga"));
+        p.setJumlah((Integer) rs.getObject("jumlah"));
+
+        // relasi ke produk
+        Produk px = new Produk();
+        px.setId((Integer) rs.getObject("id_produk"));
+        px.setKode(rs.getString("kode_produk"));
+        px.setNama(rs.getString("nama_produk"));
+        px.setHarga(rs.getBigDecimal("harga_produk"));
+        p.setProduk(px);
+
+        // relasi ke penjualan
+        Penjualan jual = new Penjualan();
+        jual.setId((Integer) rs.getObject("id_penjualan"));
+        jual.setWaktuTransaksi(rs.getDate("waktu_transaksi"));
+        p.setPenjualan(jual);
+        
         return p;
     }
 }
