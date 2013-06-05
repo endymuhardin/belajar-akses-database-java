@@ -47,6 +47,15 @@ public class PenjualanServicePlainJdbc implements PenjualanService {
             "where pd.id_produk = ? " +
             "and (p.waktu_transaksi between ? and ?) ";
     
+    private static final String SQL_CARI_PENJUALAN_DETAIL_BY_PRODUK_DAN_PERIODE = "select pd.*, p.waktu_transaksi, " +
+            "produk.kode as kode_produk, produk.nama as nama_produk, produk.harga as harga_produk " +
+            "from t_penjualan_detail pd " +
+            "inner join t_penjualan p on pd.id_penjualan = p.id " +
+            "inner join m_produk produk on pd.id_produk = produk.id " +
+            "where pd.id_produk = ? " +
+            "and (p.waktu_transaksi between ? and ?) " +
+            "limit ?,?";
+    
     private DataSource dataSource;
 
     public void setDataSource(DataSource dataSource) {
@@ -592,7 +601,45 @@ public class PenjualanServicePlainJdbc implements PenjualanService {
 
     @Override
     public List<PenjualanDetail> cariPenjualanDetailByProdukDanPeriode(Produk p, Date mulai, Date sampai, Integer halaman, Integer baris) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Connection conn = null;
+        List<PenjualanDetail> hasil = new ArrayList<PenjualanDetail>();
+        try {
+            conn = dataSource.getConnection();
+            conn.setAutoCommit(false);
+            PreparedStatement ps = conn.prepareStatement(SQL_CARI_PENJUALAN_DETAIL_BY_PRODUK_DAN_PERIODE);
+            ps.setInt(1, p.getId());
+            ps.setDate(2, new java.sql.Date(mulai.getTime()));
+            ps.setDate(3, new java.sql.Date(sampai.getTime()));
+            ps.setInt(4, PagingHelper.halamanJadiStart(halaman, baris));
+            ps.setInt(5, baris);
+            
+            ResultSet rs = ps.executeQuery();
+            while(rs.next()){
+                PenjualanDetail x = konversiResultSetJadiPenjualanDetail(rs);
+                hasil.add(x);
+            }
+            
+            conn.commit();
+            conn.setAutoCommit(true);
+        } catch (Exception err) {
+            LOGGER.error(err.getMessage(), err);
+            if(conn !=  null){
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    LOGGER.error(ex.getMessage(), ex);
+                }
+            }
+        } finally {
+            if(conn != null){
+                try {
+                    conn.close();
+                } catch (SQLException ex) {
+                    LOGGER.error(ex.getMessage(), ex);
+                }
+            }
+            return hasil;
+        }
     }
 
     private List<PenjualanDetail> cariPenjualanDetailByPenjualan(Penjualan p) {
