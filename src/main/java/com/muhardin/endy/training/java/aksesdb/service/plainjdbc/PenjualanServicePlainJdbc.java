@@ -40,6 +40,13 @@ public class PenjualanServicePlainJdbc implements PenjualanService {
             + "inner join m_produk produk on pd.id_produk = produk.id "
             + "where id_penjualan = ?";
     
+    private static final String SQL_HITUNG_PENJUALAN_DETAIL_BY_PRODUK_DAN_PERIODE = "select count(*) " +
+            "from t_penjualan_detail pd " +
+            "inner join t_penjualan p on pd.id_penjualan = p.id " +
+            "inner join m_produk produk on pd.id_produk = produk.id " +
+            "where pd.id_produk = ? " +
+            "and (p.waktu_transaksi between ? and ?) ";
+    
     private DataSource dataSource;
 
     public void setDataSource(DataSource dataSource) {
@@ -545,7 +552,42 @@ public class PenjualanServicePlainJdbc implements PenjualanService {
 
     @Override
     public Long hitungPenjualanDetailByProdukDanPeriode(Produk p, Date mulai, Date sampai) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Connection conn = null;
+        Long hasil = null;
+        try {
+            conn = dataSource.getConnection();
+            conn.setAutoCommit(false);
+            PreparedStatement ps = conn.prepareStatement(SQL_HITUNG_PENJUALAN_DETAIL_BY_PRODUK_DAN_PERIODE);
+            ps.setInt(1, p.getId());
+            ps.setDate(2, new java.sql.Date(mulai.getTime()));
+            ps.setDate(3, new java.sql.Date(sampai.getTime()));
+            
+            ResultSet rs = ps.executeQuery();
+            if(rs.next()){
+                hasil = rs.getLong(1);
+            }
+            
+            conn.commit();
+            conn.setAutoCommit(true);
+        } catch (Exception err) {
+            LOGGER.error(err.getMessage(), err);
+            if(conn !=  null){
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    LOGGER.error(ex.getMessage(), ex);
+                }
+            }
+        } finally {
+            if(conn != null){
+                try {
+                    conn.close();
+                } catch (SQLException ex) {
+                    LOGGER.error(ex.getMessage(), ex);
+                }
+            }
+            return hasil;
+        }
     }
 
     @Override
