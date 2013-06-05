@@ -28,6 +28,7 @@ public class PenjualanServicePlainJdbc implements PenjualanService {
     private static final String SQL_HITUNG_PRODUK_BY_NAMA = "select count(*) from m_produk where lower(nama) like ?";
     private static final String SQL_CARI_PRODUK_BY_NAMA = "select * from m_produk where lower(nama) like ? limit ?,?";
     
+    private static final String SQL_HITUNG_PENJUALAN_BY_PERIODE = "select count(*) from t_penjualan where waktu_transaksi between ? and ?";
     private static final String SQL_INSERT_PENJUALAN = "insert into t_penjualan(waktu_transaksi) values (?)";
     private static final String SQL_INSERT_PENJUALAN_DETAIL = "insert into t_penjualan_detail (id_penjualan, id_produk, jumlah, harga) values (?,?,?,?)";
     private static final String SQL_CARI_PENJUALAN_BY_ID = "select * from t_penjualan where id = ?";
@@ -460,7 +461,41 @@ public class PenjualanServicePlainJdbc implements PenjualanService {
 
     @Override
     public Long hitungPenjualanByPeriode(Date mulai, Date sampai) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Connection conn = null;
+        Long p = null;
+        try {
+            conn = dataSource.getConnection();
+            conn.setAutoCommit(false);
+            PreparedStatement ps = conn.prepareStatement(SQL_HITUNG_PENJUALAN_BY_PERIODE);
+            ps.setDate(1, new java.sql.Date(mulai.getTime()));
+            ps.setDate(2, new java.sql.Date(sampai.getTime()));
+            
+            ResultSet rs = ps.executeQuery();
+            if(rs.next()){
+                p = rs.getLong(1);
+            }
+            
+            conn.commit();
+            conn.setAutoCommit(true);
+        } catch (Exception err) {
+            LOGGER.error(err.getMessage(), err);
+            if(conn !=  null){
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    LOGGER.error(ex.getMessage(), ex);
+                }
+            }
+        } finally {
+            if(conn != null){
+                try {
+                    conn.close();
+                } catch (SQLException ex) {
+                    LOGGER.error(ex.getMessage(), ex);
+                }
+            }
+            return p;
+        }
     }
 
     @Override
